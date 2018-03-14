@@ -3,9 +3,7 @@ package com.bjz.imusicteacher;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
-import com.bjz.cnninference.model.Model;
-import com.bjz.cnninference.model.ModelBuilder;
-import com.bjz.imusicteacher.model.PredictionModel;
+import com.bjz.imusicteacher.model.descriptor.ModelDescriptor;
 import com.bjz.imusicteacher.service.PredictionModelService;
 
 import retrofit2.Call;
@@ -26,14 +24,14 @@ public class MainActivity extends AppCompatActivity {
                 .build();
         PredictionModelService service = retrofit.create(PredictionModelService.class);
 
-        service.getModel().enqueue(new Callback<PredictionModel>() {
+        service.getModel().enqueue(new Callback<ModelDescriptor>() {
             @Override
-            public void onResponse(Call<PredictionModel> call, Response<PredictionModel> response) {
-                PredictionModel body = response.body();
+            public void onResponse(Call<ModelDescriptor> call, Response<ModelDescriptor> response) {
+                ModelDescriptor body = response.body();
             }
 
             @Override
-            public void onFailure(Call<PredictionModel> call, Throwable t) {
+            public void onFailure(Call<ModelDescriptor> call, Throwable t) {
                 throw new RuntimeException("CALL FAILURE" + t.getMessage());
             }
         });

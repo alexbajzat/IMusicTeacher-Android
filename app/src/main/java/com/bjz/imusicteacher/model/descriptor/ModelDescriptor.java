@@ -1,4 +1,6 @@
-package com.bjz.imusicteacher.model;
+package com.bjz.imusicteacher.model.descriptor;
+
+import com.bjz.imusicteacher.model.descriptor.LayerDescriptor;
 
 import java.util.List;
 
@@ -6,7 +8,7 @@ import java.util.List;
  * Created by bjz on 3/14/2018.
  */
 
-public class PredictionModel {
+public class ModelDescriptor {
     private List<LayerDescriptor> layers;
 
     public List<LayerDescriptor> getLayers() {

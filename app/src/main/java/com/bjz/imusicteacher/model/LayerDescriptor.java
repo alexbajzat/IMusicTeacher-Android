@@ -6,8 +6,8 @@ package com.bjz.imusicteacher.model;
 
 public class LayerDescriptor {
     private double[][][] weights;
-    private LayerType layerType;
-    private ActivationType activationType;
+    private LayerType type;
+    private ActivationType activation;
 
     public double[][][] getWeights() {
         return weights;
@@ -17,19 +17,19 @@ public class LayerDescriptor {
         this.weights = weights;
     }
 
-    public LayerType getLayerType() {
-        return layerType;
+    public LayerType getType() {
+        return type;
     }
 
-    public void setLayerType(LayerType layerType) {
-        this.layerType = layerType;
+    public void setType(LayerType type) {
+        this.type = type;
     }
 
-    public ActivationType getActivationType() {
-        return activationType;
+    public ActivationType getActivation() {
+        return activation;
     }
 
-    public void setActivationType(ActivationType activationType) {
-        this.activationType = activationType;
+    public void setActivation(ActivationType activation) {
+        this.activation = activation;
     }
 }

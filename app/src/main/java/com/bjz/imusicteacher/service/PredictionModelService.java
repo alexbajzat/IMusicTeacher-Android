@@ -2,6 +2,8 @@ package com.bjz.imusicteacher.service;
 
 import com.bjz.imusicteacher.model.PredictionModel;
 
+import retrofit2.Call;
+import retrofit2.Callback;
 import retrofit2.http.GET;
 
 /**
@@ -9,6 +11,6 @@ import retrofit2.http.GET;
  */
 
 public interface PredictionModelService {
-    @GET(value = "/network/model")
-    PredictionModel getModel();
+    @GET(value = "/model")
+    Call<PredictionModel> getModel();
 }

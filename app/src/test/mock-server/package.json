@@ -1,0 +1,15 @@
+{
+  "name": "model-mock-server",
+  "version": "1.0.0",
+  "description": "This is a mock server for a prediction model api",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "repository": "npm/npm",
+  "dependencies":{
+  	"json-server": "0.12.1"
+  }
+}

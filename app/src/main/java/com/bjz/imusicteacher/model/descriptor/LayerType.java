@@ -5,5 +5,5 @@ package com.bjz.imusicteacher.model.descriptor;
  */
 
 public enum LayerType {
-    CONV, HIDDEN, POOL, FLAT
+    CONV, HIDDEN, POOLING, FLAT
 }

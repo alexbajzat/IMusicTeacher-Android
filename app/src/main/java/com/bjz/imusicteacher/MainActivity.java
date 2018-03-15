@@ -4,6 +4,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
 import com.bjz.imusicteacher.model.descriptor.ModelDescriptor;
+import com.bjz.imusicteacher.model.network.NetworkModel;
+import com.bjz.imusicteacher.model.network.NetworkModelBuilder;
 import com.bjz.imusicteacher.service.PredictionModelService;
 
 import retrofit2.Call;
@@ -28,6 +30,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<ModelDescriptor> call, Response<ModelDescriptor> response) {
                 ModelDescriptor body = response.body();
+                NetworkModel model = NetworkModel.builder()
+                        .build(body);
             }
 
             @Override

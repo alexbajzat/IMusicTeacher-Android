@@ -1,0 +1,29 @@
+package com.bjz.imusicteacher.utils;
+
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.ColorMatrix;
+import android.graphics.ColorMatrixColorFilter;
+import android.graphics.Paint;
+
+/**
+ * Created by bjz on 3/20/2018.
+ */
+
+public class ProcessingUtils {
+    public static Bitmap getGrayscale(Bitmap src) {
+        int width = src.getWidth();
+        int height = src.getHeight();
+
+        Bitmap dest = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
+
+        Canvas canvas = new Canvas(dest);
+        Paint paint = new Paint();
+        ColorMatrix colorMatrix = new ColorMatrix();
+        colorMatrix.setSaturation(0); //value of 0 maps the color to gray-scale
+        ColorMatrixColorFilter filter = new ColorMatrixColorFilter(colorMatrix);
+        paint.setColorFilter(filter);
+        canvas.drawBitmap(src, 0, 0, paint);
+        return dest;
+    }
+}

@@ -28,6 +28,7 @@ import android.widget.Toast;
 
 
 import com.bjz.imusicteacher.R;
+import com.bjz.imusicteacher.utils.ProcessingUtils;
 
 import java.util.Arrays;
 
@@ -198,7 +199,7 @@ public class ProcessingActivity extends AppCompatActivity {
     }
 
     private void processImage() {
-        Bitmap bitmap = previewTextureView.getBitmap();
+        Bitmap grayscale = ProcessingUtils.getGrayscale(previewTextureView.getBitmap());
     }
 
     private void startBackgroundThread() {

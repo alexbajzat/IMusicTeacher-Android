@@ -3,13 +3,17 @@ package com.bjz.imusicteacher.activity;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CaptureFailure;
 import android.hardware.camera2.CaptureRequest;
+import android.hardware.camera2.CaptureResult;
+import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.os.Bundle;
 import android.os.Handler;
@@ -37,12 +41,12 @@ public class ProcessingActivity extends AppCompatActivity {
     private CameraDevice mCameraDevice;
     private String mCameraId;
     private Size imageDimension;
-    private CaptureRequest.Builder mCaptureRequestBuilder;
+    private CaptureRequest.Builder mPreviewRequestBuilder;
     private CameraCaptureSession mCameraCaptureSession;
     private HandlerThread mBackgroundThread;
     private Handler mBackgroundHandler;
 
-    CameraDevice.StateCallback cameraStateCallback = new CameraDevice.StateCallback() {
+    private CameraDevice.StateCallback mCameraStateCallback = new CameraDevice.StateCallback() {
         @Override
         public void onOpened(@NonNull CameraDevice cameraDevice) {
             mCameraDevice = cameraDevice;
@@ -61,7 +65,7 @@ public class ProcessingActivity extends AppCompatActivity {
             mCameraDevice = null;
         }
     };
-    TextureView.SurfaceTextureListener surfaceTextureListener = new TextureView.SurfaceTextureListener() {
+    private TextureView.SurfaceTextureListener mSurfaceTextureListener = new TextureView.SurfaceTextureListener() {
         @Override
         public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int i, int i1) {
             initCamera();
@@ -82,7 +86,14 @@ public class ProcessingActivity extends AppCompatActivity {
 
         }
     };
+    private CameraCaptureSession.CaptureCallback mCaptureCallback = new CameraCaptureSession.CaptureCallback() {
+        @Override
+        public void onCaptureCompleted(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
+            processImage();
+        }
+    };
 
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_processing);
@@ -91,8 +102,36 @@ public class ProcessingActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        startBackgroundThread();
+        if (previewTextureView.isAvailable()) {
+            initCamera();
+        } else {
+            previewTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        stopBackgroundThread();
+        super.onPause();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == REQUEST_CAMERA_PERMISSION) {
+            if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "You can`t use camera without permission", Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        }
+    }
+
+
     private void initPreviewTextureView() {
-        previewTextureView.setSurfaceTextureListener(surfaceTextureListener);
+        previewTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
     }
 
     private void initCamera() {
@@ -109,7 +148,7 @@ public class ProcessingActivity extends AppCompatActivity {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, REQUEST_CAMERA_PERMISSION);
                 return;
             }
-            cameraManager.openCamera(mCameraId, cameraStateCallback, null);
+            cameraManager.openCamera(mCameraId, mCameraStateCallback, null);
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
@@ -119,9 +158,9 @@ public class ProcessingActivity extends AppCompatActivity {
         try {
             SurfaceTexture texture = previewTextureView.getSurfaceTexture();
             texture.setDefaultBufferSize(imageDimension.getWidth(), imageDimension.getHeight());
-            mCaptureRequestBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+            mPreviewRequestBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
             Surface surface = new Surface(texture);
-            mCaptureRequestBuilder.addTarget(surface);
+            mPreviewRequestBuilder.addTarget(surface);
             mCameraDevice.createCaptureSession(Arrays.asList(surface), new CameraCaptureSession.StateCallback() {
                 @Override
                 public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
@@ -149,39 +188,17 @@ public class ProcessingActivity extends AppCompatActivity {
         if (mCameraDevice == null) {
             Toast.makeText(this, "Camera error", Toast.LENGTH_LONG).show();
         }
-        mCaptureRequestBuilder.set(CaptureRequest.CONTROL_MODE, CaptureRequest.CONTROL_MODE_AUTO);
+        // props for auto focus
+        mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
         try {
-            mCameraCaptureSession.setRepeatingRequest(mCaptureRequestBuilder.build(), null, mBackgroundHandler);
+            mCameraCaptureSession.setRepeatingRequest(mPreviewRequestBuilder.build(), mCaptureCallback, mBackgroundHandler);
         } catch (CameraAccessException e) {
-            e.printStackTrace();
+            Toast.makeText(getApplicationContext(), "Cannot preview", Toast.LENGTH_SHORT).show();
         }
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        startBackgroundThread();
-        if (previewTextureView.isAvailable()) {
-            initCamera();
-        } else {
-            previewTextureView.setSurfaceTextureListener(surfaceTextureListener);
-        }
-    }
-
-    @Override
-    protected void onPause() {
-        stopBackgroundThread();
-        super.onPause();
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == REQUEST_CAMERA_PERMISSION) {
-            if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "You can`t use camera without permission", Toast.LENGTH_SHORT).show();
-                finish();
-            }
-        }
+    private void processImage() {
+        Bitmap bitmap = previewTextureView.getBitmap();
     }
 
     private void startBackgroundThread() {

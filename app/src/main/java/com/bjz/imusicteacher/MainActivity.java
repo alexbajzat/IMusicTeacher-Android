@@ -26,25 +26,7 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this, ProcessingActivity.class);
         startActivity(intent);
 
-//        Retrofit retrofit = new Retrofit.Builder()
-//                .baseUrl("http://192.168.56.1:3000")
-//                .addConverterFactory(JacksonConverterFactory.create())
-//                .build();
-//        PredictionModelService service = retrofit.create(PredictionModelService.class);
-//
-//        service.getModel().enqueue(new Callback<ModelDescriptor>() {
-//            @Override
-//            public void onResponse(Call<ModelDescriptor> call, Response<ModelDescriptor> response) {
-//                ModelDescriptor body = response.body();
-//                NetworkModel model = NetworkModel.builder()
-//                        .build(body);
-//            }
-//
-//            @Override
-//            public void onFailure(Call<ModelDescriptor> call, Throwable t) {
-//                throw new RuntimeException("CALL FAILURE" + t.getMessage());
-//            }
-//        });
+
 
     }
 }

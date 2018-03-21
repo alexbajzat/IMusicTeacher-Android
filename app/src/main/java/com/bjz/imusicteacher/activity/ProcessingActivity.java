@@ -10,9 +10,7 @@ import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
-import android.hardware.camera2.CaptureFailure;
 import android.hardware.camera2.CaptureRequest;
-import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.os.Bundle;
@@ -26,14 +24,21 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.widget.Toast;
 
-
 import com.bjz.imusicteacher.R;
-import com.bjz.imusicteacher.utils.ProcessingUtils;
+import com.bjz.imusicteacher.model.descriptor.ModelDescriptor;
+import com.bjz.imusicteacher.model.network.Configuration;
+import com.bjz.imusicteacher.model.network.NetworkModel;
+import com.bjz.imusicteacher.service.PredictionModelService;
 
 import java.util.Arrays;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 
 public class ProcessingActivity extends AppCompatActivity {
     private static final int REQUEST_CAMERA_PERMISSION = 200;
@@ -46,7 +51,7 @@ public class ProcessingActivity extends AppCompatActivity {
     private CameraCaptureSession mCameraCaptureSession;
     private HandlerThread mBackgroundThread;
     private Handler mBackgroundHandler;
-
+    private NetworkModel model;
     private CameraDevice.StateCallback mCameraStateCallback = new CameraDevice.StateCallback() {
         @Override
         public void onOpened(@NonNull CameraDevice cameraDevice) {
@@ -99,6 +104,7 @@ public class ProcessingActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_processing);
         ButterKnife.bind(this);
+        initializeModel();
         initPreviewTextureView();
 
     }
@@ -199,7 +205,11 @@ public class ProcessingActivity extends AppCompatActivity {
     }
 
     private void processImage() {
-        Bitmap grayscale = ProcessingUtils.getGrayscale(previewTextureView.getBitmap());
+        Bitmap original = previewTextureView.getBitmap();
+        if (model != null) {
+            model.process(original);
+        }
+        System.out.println();
     }
 
     private void startBackgroundThread() {
@@ -218,5 +228,28 @@ public class ProcessingActivity extends AppCompatActivity {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    //todo this is just a mock, remove
+    private void initializeModel() {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("http://192.168.10.100:3000")
+                .addConverterFactory(JacksonConverterFactory.create())
+                .build();
+        PredictionModelService service = retrofit.create(PredictionModelService.class);
+
+        service.getModel().enqueue(new Callback<ModelDescriptor>() {
+            @Override
+            public void onResponse(Call<ModelDescriptor> call, Response<ModelDescriptor> response) {
+                ModelDescriptor body = response.body();
+                model = NetworkModel.builder()
+                        .build(body, new Configuration(64, 64, true));
+            }
+
+            @Override
+            public void onFailure(Call<ModelDescriptor> call, Throwable t) {
+                throw new RuntimeException("CALL FAILURE" + t.getMessage());
+            }
+        });
     }
 }

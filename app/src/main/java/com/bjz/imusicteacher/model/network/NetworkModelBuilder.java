@@ -26,7 +26,7 @@ public class NetworkModelBuilder {
     NetworkModelBuilder() {
     }
 
-    public NetworkModel build(ModelDescriptor modelDescriptor) {
+    public NetworkModel build(ModelDescriptor modelDescriptor, Configuration configuration) {
         List<ComplexLayer> complexLayers = new ArrayList<>();
         List<SimpleLayer> simpleLayers = new ArrayList<>();
         FlatteningTransitionLayer flattenLayer = null;
@@ -65,7 +65,7 @@ public class NetworkModelBuilder {
             modelBuilder.addSimpleLayer(simpleLayer);
         }
         Model model = modelBuilder.build();
-        return new NetworkModel(model);
+        return new NetworkModel(model, configuration);
     }
 
 }

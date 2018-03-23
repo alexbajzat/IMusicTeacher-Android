@@ -2,17 +2,11 @@ package com.bjz.imusicteacher.model.network;
 
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.support.v4.content.res.TypedArrayUtils;
 
 import com.bjz.cnninference.model.Model;
+import com.bjz.cnninference.prediction.PredictionResult;
+import com.bjz.imusicteacher.exception.InconpatibleConfigException;
 import com.bjz.imusicteacher.model.network.prediction.Prediction;
-import com.bjz.imusicteacher.utils.ProcessingUtils;
-import com.fasterxml.jackson.core.util.ByteArrayBuilder;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.nio.ByteBuffer;
 
 /**
  * Created by bjz on 3/14/2018.
@@ -33,20 +27,33 @@ public class NetworkModel {
     }
 
     public Prediction process(Bitmap target) {
-        Bitmap grayscale = ProcessingUtils.getGrayscale(target);
-        Bitmap resized = Bitmap.createScaledBitmap(grayscale, configuration.inputWidth, configuration.inputHeight, false);
+        Bitmap resized = Bitmap.createScaledBitmap(target, configuration.inputWidth, configuration.inputHeight, false);
 
-        int bytes = resized.getByteCount();
-        ByteBuffer buffer = ByteBuffer.allocate(bytes);
-        resized.copyPixelsToBuffer(buffer);
-
-//        ByteArrayOutputStream outputStream = new ByteArrayOutputStream(configuration.inputWidth * configuration.inputHeight);
-//        resized.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
-
-        double[][][] preparedData = new double[1][][];
-        preparedData[0] = ProcessingUtils.reshapeAndConvertByteArray(buffer.array(), configuration.inputHeight, configuration.inputWidth);
-        model.predict(preparedData);
+        double[][][] prepared = this.prepareData(resized);
+        PredictionResult predict = model.predict(prepared);
         return new Prediction();
+    }
+
+    public double[][][] prepareData(Bitmap target) {
+        if (!target.getConfig().equals(Bitmap.Config.ARGB_8888)) {
+            throw new InconpatibleConfigException(String.format("Accepted bitmap color config: %s, actual: %s"
+                    , Bitmap.Config.ARGB_8888.name()
+                    , target.getConfig().name()));
+        }
+
+        double[][][] result = new double[1][target.getHeight()][target.getWidth()];
+        for (int i = 0; i < target.getHeight(); i++) {
+            for (int j = 0; j < target.getWidth(); j++) {
+                int pixel = target.getPixel(i, j);
+                int R = (pixel >> 16) & 0xff;
+                int G = (pixel >> 8) & 0xff;
+                int B = pixel & 0xff;
+                result[0][i][j] = (R + G + B) / 3; //grayscale
+
+            }
+
+        }
+        return result;
     }
 
 }

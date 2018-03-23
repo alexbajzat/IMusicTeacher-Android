@@ -19,6 +19,7 @@ import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
 import android.view.TextureView;
@@ -244,10 +245,12 @@ public class ProcessingActivity extends AppCompatActivity {
                 ModelDescriptor body = response.body();
                 model = NetworkModel.builder()
                         .build(body, new Configuration(64, 64, true));
+                Log.d("Success", "Call made it");
             }
 
             @Override
             public void onFailure(Call<ModelDescriptor> call, Throwable t) {
+                Log.d("Error", "Error");
                 throw new RuntimeException("CALL FAILURE" + t.getMessage());
             }
         });

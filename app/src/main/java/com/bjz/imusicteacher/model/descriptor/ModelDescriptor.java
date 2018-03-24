@@ -10,6 +10,7 @@ import java.util.List;
 
 public class ModelDescriptor {
     private List<LayerDescriptor> layers;
+    private PredictionSample sample;
 
     public List<LayerDescriptor> getLayers() {
         return layers;
@@ -17,5 +18,13 @@ public class ModelDescriptor {
 
     public void setLayers(List<LayerDescriptor> layers) {
         this.layers = layers;
+    }
+
+    public PredictionSample getSample() {
+        return sample;
+    }
+
+    public void setSample(PredictionSample sample) {
+        this.sample = sample;
     }
 }

@@ -234,7 +234,7 @@ public class ProcessingActivity extends AppCompatActivity {
     //todo this is just a mock, remove
     private void initializeModel() {
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://192.168.10.100:3000")
+                .baseUrl("http://192.168.0.143:3000")
                 .addConverterFactory(JacksonConverterFactory.create())
                 .build();
         PredictionModelService service = retrofit.create(PredictionModelService.class);

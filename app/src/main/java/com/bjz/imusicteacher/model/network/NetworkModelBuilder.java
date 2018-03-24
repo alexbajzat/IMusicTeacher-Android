@@ -1,5 +1,7 @@
 package com.bjz.imusicteacher.model.network;
 
+import android.util.Log;
+
 import com.bjz.cnninference.activations.Activation;
 import com.bjz.cnninference.activations.ReLUActivation;
 import com.bjz.cnninference.layers.ConvComplexLayer;
@@ -10,10 +12,13 @@ import com.bjz.cnninference.layers.apis.ComplexLayer;
 import com.bjz.cnninference.layers.apis.SimpleLayer;
 import com.bjz.cnninference.model.Model;
 import com.bjz.cnninference.model.ModelBuilder;
+import com.bjz.cnninference.prediction.PredictionResult;
+import com.bjz.imusicteacher.exception.IncosistentModelTransportException;
 import com.bjz.imusicteacher.model.descriptor.ActivationType;
 import com.bjz.imusicteacher.model.descriptor.LayerDescriptor;
 import com.bjz.imusicteacher.model.descriptor.LayerType;
 import com.bjz.imusicteacher.model.descriptor.ModelDescriptor;
+import com.bjz.imusicteacher.model.descriptor.PredictionSample;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -65,7 +70,36 @@ public class NetworkModelBuilder {
             modelBuilder.addSimpleLayer(simpleLayer);
         }
         Model model = modelBuilder.build();
+
+        // validate if the dto transport failed or the client model operations don`t match
+        validate(model, modelDescriptor.getSample());
         return new NetworkModel(model, configuration);
+    }
+
+    private void validate(Model model, PredictionSample sample) {
+        double[][][] data = sample.getData();
+        long start = System.currentTimeMillis();
+        PredictionResult predict = model.predict(data);
+        long stop = System.currentTimeMillis();
+        Log.d("NetworkBuilderValidator", String.format("Time to predict: %d ms", stop - start));
+
+        double[] actualRawResults = predict.getRawResults();
+        double[] validRawResults = sample.getResult();
+
+        for (int i = 0; i < actualRawResults.length; i++) {
+            if (Double.compare(actualRawResults[i], validRawResults[i]) != 0) {
+                throw new IncosistentModelTransportException("Model integrity/construction degradation. Raw results do not match");
+            }
+        }
+
+        double[] actualProbs = predict.getProbabilites();
+        double[] validProbs = sample.getProbabilities();
+
+        for (int i = 0; i < actualRawResults.length; i++) {
+            if (Double.compare(actualProbs[i], validProbs[i]) != 0) {
+                throw new IncosistentModelTransportException("Model integrity/construction degradation. Raw results do not match");
+            }
+        }
     }
 
 }

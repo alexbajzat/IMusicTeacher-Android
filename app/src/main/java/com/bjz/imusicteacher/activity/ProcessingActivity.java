@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -20,18 +21,25 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.util.Pair;
 import android.util.Size;
 import android.view.Surface;
 import android.view.TextureView;
+import android.view.View;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bjz.imusicteacher.R;
 import com.bjz.imusicteacher.model.descriptor.ModelDescriptor;
 import com.bjz.imusicteacher.model.network.Configuration;
 import com.bjz.imusicteacher.model.network.NetworkModel;
+import com.bjz.imusicteacher.model.network.prediction.Prediction;
 import com.bjz.imusicteacher.service.PredictionModelService;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -45,6 +53,15 @@ public class ProcessingActivity extends AppCompatActivity {
     private static final int REQUEST_CAMERA_PERMISSION = 200;
     @BindView(R.id.previewTextureView)
     TextureView previewTextureView;
+
+    @BindView(R.id.server_loading_layer_view)
+    View serverLoadingView;
+    @BindView(R.id.server_loading_text)
+    TextView serverLoadingText;
+    @BindView(R.id.prediction_debug_layout)
+    LinearLayout debugView;
+    @BindView(R.id.debug_processing_time)
+    TextView debugProcessingTimeView;
     private CameraDevice mCameraDevice;
     private String mCameraId;
     private Size imageDimension;
@@ -99,12 +116,42 @@ public class ProcessingActivity extends AppCompatActivity {
             processImage();
         }
     };
+    private HashMap<Integer, String> notesMap;
+
+    private HashMap<Integer, Pair<TextView, String>> notesDebugDisplay;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_processing);
         ButterKnife.bind(this);
+
+        //TODO bullshit way to initialize, must change
+        notesMap = new HashMap<>();
+        notesMap.put(0, "C");
+        notesMap.put(1, "D");
+        notesMap.put(2, "E");
+        notesMap.put(3, "F");
+        notesMap.put(4, "G");
+        notesMap.put(5, "A");
+        notesMap.put(6, "B");
+        notesMap.put(7, "J");
+        notesMap.put(8, "K");
+        notesMap.put(9, "L");
+
+        for (Map.Entry<Integer, String> entry : notesMap.entrySet()) {
+            TextView textView = new TextView(this);
+            textView.setText(String.format("%s : %d", entry.getValue(), 0));
+            textView.setId(entry.getKey());
+            textView.setTextColor(Color.WHITE);
+            textView.setTextSize(20);
+            textView.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT));
+            debugView.addView(textView);
+        }
+
         initializeModel();
         initPreviewTextureView();
 
@@ -208,9 +255,36 @@ public class ProcessingActivity extends AppCompatActivity {
     private void processImage() {
         Bitmap original = previewTextureView.getBitmap();
         if (model != null) {
-            model.process(original);
+            Prediction result = model.process(original);
+            updateDebugView(result);
         }
         System.out.println();
+    }
+
+    private void updateDebugView(Prediction result) {
+        final double[] probabilities = result.getProbabilities();
+        final double processingTime = result.getProcessingTime();
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 0; i < probabilities.length; i++) {
+                    TextView view = findViewById(i);
+                    view.setText(String.format("%s : %f", notesMap.get(i), probabilities[i]));
+                }
+                debugProcessingTimeView.setText(String.format("Process time: %f", processingTime));
+            }
+        });
+    }
+
+    private void showLoadingPreview() {
+        previewTextureView.setVisibility(View.VISIBLE);
+        serverLoadingText.setVisibility(View.VISIBLE);
+    }
+
+    private void stopLoadingPreview() {
+        serverLoadingView.setVisibility(View.INVISIBLE);
+        serverLoadingText.setVisibility(View.INVISIBLE);
     }
 
     private void startBackgroundThread() {
@@ -234,11 +308,12 @@ public class ProcessingActivity extends AppCompatActivity {
     //todo this is just a mock, remove
     private void initializeModel() {
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://192.168.0.143:3000")
+                .baseUrl("http://192.168.10.98:3000")
                 .addConverterFactory(JacksonConverterFactory.create())
                 .build();
         PredictionModelService service = retrofit.create(PredictionModelService.class);
 
+        showLoadingPreview();
         service.getModel().enqueue(new Callback<ModelDescriptor>() {
             @Override
             public void onResponse(Call<ModelDescriptor> call, Response<ModelDescriptor> response) {
@@ -246,12 +321,13 @@ public class ProcessingActivity extends AppCompatActivity {
                 model = NetworkModel.builder()
                         .build(body, new Configuration(64, 64, true));
                 Log.d("Success", "Call made it");
+                stopLoadingPreview();
             }
 
             @Override
             public void onFailure(Call<ModelDescriptor> call, Throwable t) {
                 Log.d("Error", "Error");
-                throw new RuntimeException("CALL FAILURE" + t.getMessage());
+                Toast.makeText(getApplicationContext(), "Cannot fetch data from server", Toast.LENGTH_LONG).show();
             }
         });
     }

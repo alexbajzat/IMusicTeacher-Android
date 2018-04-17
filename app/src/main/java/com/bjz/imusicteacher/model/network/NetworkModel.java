@@ -27,11 +27,17 @@ public class NetworkModel {
     }
 
     public Prediction process(Bitmap target) {
+        double counterStart = System.currentTimeMillis();
         Bitmap resized = Bitmap.createScaledBitmap(target, configuration.inputWidth, configuration.inputHeight, false);
 
         double[][][] prepared = this.prepareData(resized);
         PredictionResult predict = model.predict(prepared);
-        return new Prediction();
+
+        double finalCounter = System.currentTimeMillis() - counterStart;
+
+        return new Prediction()
+                .setProbabilities(predict.getProbabilites())
+                .setProcessingTime(finalCounter);
     }
 
     public double[][][] prepareData(Bitmap target) {
@@ -49,7 +55,6 @@ public class NetworkModel {
                 int G = (pixel >> 8) & 0xff;
                 int B = pixel & 0xff;
                 result[0][i][j] = (R + G + B) / 3; //grayscale
-
             }
 
         }

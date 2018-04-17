@@ -6,12 +6,37 @@
     android:orientation="vertical"
     tools:context="com.bjz.imusicteacher.activity.ProcessingActivity">
 
+    <!-- Camera preview layout -->
     <TextureView
         android:id="@+id/previewTextureView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <!-- Camera overlap -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@color/dark_transparent" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="2" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@color/dark_transparent" />
+    </LinearLayout>
+
+    <!-- Loading preview -->
     <View
         android:id="@+id/server_loading_layer_view"
         android:layout_width="match_parent"
@@ -30,6 +55,7 @@
         android:textSize="25sp"
         android:visibility="invisible" />
 
+    <!-- Debug view layout -->
     <LinearLayout
         android:id="@+id/prediction_debug_layout"
         android:layout_width="wrap_content"

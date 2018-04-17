@@ -27,20 +27,20 @@ public class NetworkModel {
     }
 
     public Prediction process(Bitmap target) {
-        double counterStart = System.currentTimeMillis();
+        long counterStart = System.currentTimeMillis();
         Bitmap resized = Bitmap.createScaledBitmap(target, configuration.inputWidth, configuration.inputHeight, false);
 
         double[][][] prepared = this.prepareData(resized);
         PredictionResult predict = model.predict(prepared);
 
-        double finalCounter = System.currentTimeMillis() - counterStart;
+        long finalCounter = System.currentTimeMillis() - counterStart;
 
         return new Prediction()
                 .setProbabilities(predict.getProbabilites())
                 .setProcessingTime(finalCounter);
     }
 
-    public double[][][] prepareData(Bitmap target) {
+    private double[][][] prepareData(Bitmap target) {
         if (!target.getConfig().equals(Bitmap.Config.ARGB_8888)) {
             throw new InconpatibleConfigException(String.format("Accepted bitmap color config: %s, actual: %s"
                     , Bitmap.Config.ARGB_8888.name()

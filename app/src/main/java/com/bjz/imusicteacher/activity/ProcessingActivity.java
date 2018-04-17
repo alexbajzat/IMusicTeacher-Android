@@ -254,6 +254,7 @@ public class ProcessingActivity extends AppCompatActivity {
 
     private void processImage() {
         Bitmap original = previewTextureView.getBitmap();
+        //todo extract central image from original image
         if (model != null) {
             Prediction result = model.process(original);
             updateDebugView(result);
@@ -263,16 +264,16 @@ public class ProcessingActivity extends AppCompatActivity {
 
     private void updateDebugView(Prediction result) {
         final double[] probabilities = result.getProbabilities();
-        final double processingTime = result.getProcessingTime();
+        final long processingTime = result.getProcessingTime();
 
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 for (int i = 0; i < probabilities.length; i++) {
                     TextView view = findViewById(i);
-                    view.setText(String.format("%s : %f", notesMap.get(i), probabilities[i]));
+                    view.setText(String.format("%s : %.2f", notesMap.get(i), probabilities[i]));
                 }
-                debugProcessingTimeView.setText(String.format("Process time: %f", processingTime));
+                debugProcessingTimeView.setText(String.format("Process time: %d", processingTime));
             }
         });
     }

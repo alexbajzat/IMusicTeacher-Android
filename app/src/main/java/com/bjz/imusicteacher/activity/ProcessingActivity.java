@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
@@ -254,9 +255,16 @@ public class ProcessingActivity extends AppCompatActivity {
 
     private void processImage() {
         Bitmap original = previewTextureView.getBitmap();
-        //todo extract central image from original image
+
+        int subXPosition = 0;
+        int subYPosition = original.getHeight() / 4;
+        int subWidth = original.getWidth();
+        int subHeight = original.getHeight() / 4 * 2;
+
+        Bitmap cropped = Bitmap.createBitmap(original, subXPosition, subYPosition, subWidth, subHeight);
+
         if (model != null) {
-            Prediction result = model.process(original);
+            Prediction result = model.process(cropped);
             updateDebugView(result);
         }
         System.out.println();
@@ -309,7 +317,7 @@ public class ProcessingActivity extends AppCompatActivity {
     //todo this is just a mock, remove
     private void initializeModel() {
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://192.168.0.143:3000")
+                .baseUrl("http://192.168.10.98:3000")
                 .addConverterFactory(JacksonConverterFactory.create())
                 .build();
         PredictionModelService service = retrofit.create(PredictionModelService.class);

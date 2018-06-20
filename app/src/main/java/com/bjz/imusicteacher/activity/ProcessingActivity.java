@@ -4,7 +4,6 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
@@ -12,6 +11,7 @@ import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
@@ -40,6 +40,7 @@ import com.bjz.imusicteacher.service.PredictionModelService;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import butterknife.BindView;
@@ -129,7 +130,7 @@ public class ProcessingActivity extends AppCompatActivity {
         ButterKnife.bind(this);
 
         //TODO bullshit way to initialize, must change
-        notesMap = new HashMap<>();
+        notesMap = new LinkedHashMap<>();
         notesMap.put(0, "C");
         notesMap.put(1, "D");
         notesMap.put(2, "E");
@@ -137,9 +138,6 @@ public class ProcessingActivity extends AppCompatActivity {
         notesMap.put(4, "G");
         notesMap.put(5, "A");
         notesMap.put(6, "B");
-        notesMap.put(7, "J");
-        notesMap.put(8, "K");
-        notesMap.put(9, "L");
 
         for (Map.Entry<Integer, String> entry : notesMap.entrySet()) {
             TextView textView = new TextView(this);
@@ -246,6 +244,8 @@ public class ProcessingActivity extends AppCompatActivity {
         }
         // props for auto focus
         mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
+        mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
+                CameraMetadata.CONTROL_AF_TRIGGER_CANCEL);
         try {
             mCameraCaptureSession.setRepeatingRequest(mPreviewRequestBuilder.build(), mCaptureCallback, mBackgroundHandler);
         } catch (CameraAccessException e) {
@@ -254,16 +254,16 @@ public class ProcessingActivity extends AppCompatActivity {
     }
 
     private void processImage() {
-        Bitmap original = previewTextureView.getBitmap();
-
-        int subXPosition = 0;
-        int subYPosition = original.getHeight() / 4;
-        int subWidth = original.getWidth();
-        int subHeight = original.getHeight() / 4 * 2;
-
-        Bitmap cropped = Bitmap.createBitmap(original, subXPosition, subYPosition, subWidth, subHeight);
-
         if (model != null) {
+            Bitmap original = previewTextureView.getBitmap();
+
+            int subXPosition = 0;
+            int subYPosition = original.getHeight() / 4;
+            int subWidth = original.getWidth();
+            int subHeight = original.getHeight() / 4 * 2;
+
+            Bitmap cropped = Bitmap.createBitmap(original, subXPosition, subYPosition, subWidth, subHeight);
+
             Prediction result = model.process(cropped);
             updateDebugView(result);
         }
@@ -317,7 +317,7 @@ public class ProcessingActivity extends AppCompatActivity {
     //todo this is just a mock, remove
     private void initializeModel() {
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://192.168.10.98:3000")
+                .baseUrl("http://192.168.0.143:3000")
                 .addConverterFactory(JacksonConverterFactory.create())
                 .build();
         PredictionModelService service = retrofit.create(PredictionModelService.class);

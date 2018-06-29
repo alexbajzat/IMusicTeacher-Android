@@ -33,7 +33,7 @@ dependencies {
     compile 'com.squareup.retrofit2:retrofit:2.3.0'
     compile 'com.squareup.retrofit2:converter-jackson:2.3.0'
     compile 'com.jakewharton:butterknife:8.8.1'
-    compile 'com.github.alexbajzat:CNN-Inference:v1.0.3'
+    compile 'com.github.alexbajzat:CNN-Inference:v1.0.9'
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
     testCompile 'junit:junit:4.12'
 }

@@ -28,6 +28,8 @@ import java.util.List;
  */
 
 public class NetworkModelBuilder {
+    private static final double ERROR = 1e-6;
+
     NetworkModelBuilder() {
     }
 
@@ -57,7 +59,7 @@ public class NetworkModelBuilder {
                     activation = new ReLUActivation();
                 }
 
-                simpleLayers.add(new HiddenSimpleLayer(activation, descriptor.getWeights()[0], descriptor.getBiases()[0]));
+                simpleLayers.add(new HiddenSimpleLayer(activation, descriptor.getWeights()[0][0], descriptor.getBiases()[0]));
             }
         }
         ModelBuilder modelBuilder = new ModelBuilder();
@@ -87,9 +89,8 @@ public class NetworkModelBuilder {
         double[] validRawResults = sample.getResult();
 
         for (int i = 0; i < actualRawResults.length; i++) {
-            if (Double.compare(actualRawResults[i], validRawResults[i]) != 0) {
-//                throw new IncosistentModelTransportException("Model integrity/construction degradation. Raw results do not match");
-                //TODO precision problem
+            if (!equals(actualRawResults[i], validRawResults[i])) {
+                throw new IncosistentModelTransportException("Model integrity/construction degradation. Raw results do not match");
             }
         }
 
@@ -97,11 +98,20 @@ public class NetworkModelBuilder {
         double[] validProbs = sample.getProbabilities();
 
         for (int i = 0; i < actualRawResults.length; i++) {
-            if (Double.compare(actualProbs[i], validProbs[i]) != 0) {
-//                throw new IncosistentModelTransportException("Model integrity/construction degradation. Raw results do not match");
-                //TODO precision problem
+            if (!equals(actualProbs[i], validProbs[i])) {
+                throw new IncosistentModelTransportException("Model integrity/construction degradation. Raw results do not match");
             }
         }
+    }
+
+    /**
+     *
+     * @param a first double number
+     * @param b second double number
+     * @return true if they equal (with an epsilon precision)
+     */
+    public static boolean equals(double a, double b) {
+        return a == b || Math.abs(a - b) < ERROR;
     }
 
 }

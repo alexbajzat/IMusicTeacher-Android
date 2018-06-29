@@ -5,7 +5,7 @@ package com.bjz.imusicteacher.model.descriptor;
  */
 
 public class LayerDescriptor {
-    private double[][][] weights;
+    private double[][][][] weights;
     private double[][] biases;
     private LayerType type;
     private ActivationType activation;
@@ -23,11 +23,11 @@ public class LayerDescriptor {
         }
     }
 
-    public double[][][] getWeights() {
+    public double[][][][] getWeights() {
         return weights;
     }
 
-    public void setWeights(double[][][] weights) {
+    public void setWeights(double[][][][] weights) {
         this.weights = weights;
     }
 

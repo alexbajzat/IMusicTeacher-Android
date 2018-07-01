@@ -55,7 +55,6 @@ public class ProcessingActivity extends AppCompatActivity {
     private static final int REQUEST_CAMERA_PERMISSION = 200;
     @BindView(R.id.previewTextureView)
     TextureView previewTextureView;
-
     @BindView(R.id.server_loading_layer_view)
     View serverLoadingView;
     @BindView(R.id.server_loading_text)
@@ -151,8 +150,8 @@ public class ProcessingActivity extends AppCompatActivity {
             debugView.addView(textView);
         }
 
-        initializeModel();
         initPreviewTextureView();
+        initializeModel();
 
     }
 
@@ -254,7 +253,7 @@ public class ProcessingActivity extends AppCompatActivity {
     }
 
     private void processImage() {
-        if (model != null) {
+        if (model != null && previewTextureView.isAvailable()) {
             Bitmap original = previewTextureView.getBitmap();
 
             int subXPosition = 0;
@@ -317,7 +316,7 @@ public class ProcessingActivity extends AppCompatActivity {
     //todo this is just a mock, remove
     private void initializeModel() {
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://192.168.10.99:3000")
+                .baseUrl("http://192.168.0.143:3000")
                 .addConverterFactory(JacksonConverterFactory.create())
                 .build();
         PredictionModelService service = retrofit.create(PredictionModelService.class);

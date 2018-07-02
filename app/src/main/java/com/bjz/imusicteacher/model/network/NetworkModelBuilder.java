@@ -28,7 +28,7 @@ import java.util.List;
  */
 
 public class NetworkModelBuilder {
-    private static final double ERROR = 1e-3;
+    private static final double ERROR = 1e-2;
 
     NetworkModelBuilder() {
     }
